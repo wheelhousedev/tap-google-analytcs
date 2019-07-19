@@ -122,23 +122,23 @@ def process_args():
     args = utils.parse_args(REQUIRED_CONFIG_KEYS)
 
     # Check for errors on the provided config params that utils.parse_args is letting through
-    if args.config.get('start_date', None) is None:
+    if not args.config.get('start_date'):
         LOGGER.critical("tap-google-analytics: a valid start_date must be provided.")
         sys.exit(1)
 
-    if args.config.get('view_id', None) is None:
+    if not args.config.get('view_id'):
         LOGGER.critical("tap-google-analytics: a valid view_id must be provided.")
         sys.exit(1)
 
-    if args.config.get('key_file_location', None) is None:
-        LOGGER.critical("tap-google-analytics: a key_file_location start_date must be provided.")
+    if not args.config.get('key_file_location'):
+        LOGGER.critical("tap-google-analytics: a valid key_file_location must be provided.")
         sys.exit(1)
 
     # Remove optional args that have empty strings as values
-    if args.config.get('reports', None) is None or args.config.get('reports') == '':
+    if not args.config.get('reports'):
         del args.config['reports']
 
-    if args.config.get('end_date', None) is None or args.config.get('end_date') == '':
+    if not args.config.get('end_date'):
         del args.config['end_date']
 
     # Process the [start_date, end_date) so that they define an open date window
