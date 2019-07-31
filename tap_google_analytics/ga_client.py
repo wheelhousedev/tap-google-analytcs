@@ -90,6 +90,46 @@ class GAClient:
 
         return (dimensions, metrics)
 
+    def lookup_data_type(self, type, attribute):
+        """
+        Get the data type of a metric or a dimension
+        """
+        try:
+            if type == 'dimension':
+                if attribute.startswith(('ga:dimension', 'ga:customVarName', 'ga:customVarValue')):
+                    # Custom Google Analytics Dimensions that are not part of
+                    #  self.dimensions_ref. They are always strings
+                    return 'string'
+
+                attr_type = self.dimensions_ref[attribute]
+            elif type == 'metric':
+                # Custom Google Analytics Metrics {ga:goalXXStarts, ga:metricXX, ... }
+                # We always treat them as as strings as we can not be sure of their data type
+                if attribute.startswith('ga:goal') and attribute.endswith(('Starts', 'Completions', 'Value', 'ConversionRate', 'Abandons', 'AbandonRate')):
+                    return 'string'
+                elif attribute.startswith('ga:searchGoal') and attribute.endswith('ConversionRate'):
+                    # Custom Google Analytics Metrics ga:searchGoalXXConversionRate
+                    return 'string'
+                elif attribute.startswith(('ga:metric', 'ga:calcMetric')):
+                    return 'string'
+
+                attr_type = self.metrics_ref[attribute]
+            else:
+                LOGGER.critical(f"Unsuported GA type: {type}")
+                sys.exit(1)
+        except KeyError:
+            LOGGER.critical(f"Unsuported GA {type}: {attribute}")
+            sys.exit(1)
+
+        data_type = 'string'
+
+        if attr_type == 'INTEGER':
+            data_type = 'integer'
+        elif attr_type == 'FLOAT' or attr_type == 'PERCENT' or attr_type == 'TIME':
+            data_type = 'number'
+
+        return data_type
+
     def process_stream(self, stream):
         try:
             records = []
@@ -199,11 +239,11 @@ class GAClient:
                 dateRangeValues = row.get('metrics', [])
 
                 for header, dimension in zip(dimensionHeaders, dimensions):
-                    data_type = self.dimensions_ref[header]
+                    data_type = self.lookup_data_type('dimension', header)
 
-                    if data_type == 'INTEGER':
+                    if data_type == 'integer':
                         value = int(dimension)
-                    elif data_type == 'FLOAT' or data_type == 'PERCENT' or data_type == 'TIME':
+                    elif data_type == 'number':
                         value = float(dimension)
                     else:
                         value = dimension
@@ -213,11 +253,11 @@ class GAClient:
                 for i, values in enumerate(dateRangeValues):
                     for metricHeader, value in zip(metricHeaders, values.get('values')):
                         metric_name = metricHeader.get('name')
-                        metric_type = self.metrics_ref[metric_name]
+                        metric_type = self.lookup_data_type('metric', metric_name)
 
-                        if metric_type == 'INTEGER':
+                        if metric_type == 'integer':
                             value = int(value)
-                        elif metric_type == 'FLOAT' or metric_type == 'PERCENT' or metric_type == 'TIME':
+                        elif metric_type == 'number':
                             value = float(value)
 
                         record[metric_name.replace("ga:","ga_")] = value

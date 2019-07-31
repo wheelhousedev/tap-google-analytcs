@@ -10,9 +10,7 @@ class ReportsHelper:
         self.reports_definition = reports_definition
 
         # Fetch the valid (dimension, metric) names and their types from GAClient
-        client = GAClient(config)
-        self.valid_dimensions = client.dimensions_ref
-        self.valid_metrics = client.metrics_ref
+        self.client = GAClient(config)
 
     def generate_catalog(self):
         """
@@ -82,7 +80,7 @@ class ReportsHelper:
                 if dimension == 'ga:date':
                     date_dimension_included = True
 
-                data_type = self.lookup_data_type('dimension', dimension)
+                data_type = self.client.lookup_data_type('dimension', dimension)
                 dimension = dimension.replace("ga:","ga_")
                 schema['properties'][dimension] = {
                     "type": [data_type],
@@ -101,7 +99,7 @@ class ReportsHelper:
 
             # Add the metrics to the schema
             for metric in report['metrics']:
-                data_type = self.lookup_data_type('metric', metric)
+                data_type = self.client.lookup_data_type('metric', metric)
                 metric = metric.replace("ga:","ga_")
 
                 schema['properties'][metric] = {
@@ -150,43 +148,6 @@ class ReportsHelper:
 
         return {'streams': streams}
 
-    def lookup_data_type(self, type, attribute):
-        try:
-            if type == 'dimension':
-                if attribute.startswith(('ga:dimension', 'ga:customVarName', 'ga:customVarValue')):
-                    # Custom Google Analytics Dimensions that are not part of
-                    #  self.valid_dimensions. They are always strings
-                    return 'string'
-
-                attr_type = self.valid_dimensions[attribute]
-            elif type == 'metric':
-                # Custom Google Analytics Metrics {ga:goalXXStarts, ga:metricXX, ... }
-                # We always treat them as as strings as we can not be sure of their data type
-                if attribute.startswith('ga:goal') and attribute.endswith(('Starts', 'Completions', 'Value', 'ConversionRate', 'Abandons', 'AbandonRate')):
-                    return 'string'
-                elif attribute.startswith('ga:searchGoal') and attribute.endswith('ConversionRate'):
-                    # Custom Google Analytics Metrics ga:searchGoalXXConversionRate
-                    return 'string'
-                elif attribute.startswith(('ga:metric', 'ga:calcMetric')):
-                    return 'string'
-
-                attr_type = self.valid_metrics[attribute]
-            else:
-                LOGGER.critical(f"Unsuported GA type: {type}")
-                sys.exit(1)
-        except KeyError:
-            LOGGER.critical(f"Unsuported GA {type}: {attribute}")
-            sys.exit(1)
-
-        data_type = 'string'
-
-        if attr_type == 'INTEGER':
-            data_type = 'integer'
-        elif attr_type == 'FLOAT' or attr_type == 'PERCENT' or attr_type == 'TIME':
-            data_type = 'number'
-
-        return data_type
-
     def validate(self):
         for report in self.reports_definition:
             try:
@@ -221,7 +182,7 @@ class ReportsHelper:
         # check that all the dimensions are proper Google Analytics Dimensions
         for dimension in dimensions:
             if not dimension.startswith(('ga:dimension', 'ga:customVarName', 'ga:customVarValue')) \
-               and dimension not in self.valid_dimensions:
+               and dimension not in self.client.dimensions_ref:
                 LOGGER.critical("'{}' is not a valid Google Analytics dimension".format(dimension))
                 LOGGER.info("For details see https://developers.google.com/analytics/devguides/reporting/core/dimsmets")
                 sys.exit(1)
@@ -236,7 +197,7 @@ class ReportsHelper:
                 # Custom Google Analytics Metrics ga:searchGoalXXConversionRate
                 continue
             elif not metric.startswith(('ga:metric', 'ga:calcMetric')) \
-               and metric not in self.valid_metrics:
+               and metric not in self.client.metrics_ref:
                 LOGGER.critical("'{}' is not a valid Google Analytics metric".format(metric))
                 LOGGER.info("For details see https://developers.google.com/analytics/devguides/reporting/core/dimsmets")
                 sys.exit(1)
