@@ -151,12 +151,32 @@ class ReportsHelper:
         return {'streams': streams}
 
     def lookup_data_type(self, type, attribute):
-        if type == 'dimension':
-            attr_type = self.valid_dimensions[attribute]
-        elif type == 'metric':
-            attr_type = self.valid_metrics[attribute]
-        else:
-            raise ValueError('Unsuported GA type')
+        try:
+            if type == 'dimension':
+                if attribute.startswith(('ga:dimension', 'ga:customVarName', 'ga:customVarValue')):
+                    # Custom Google Analytics Dimensions that are not part of
+                    #  self.valid_dimensions. They are always strings
+                    return 'string'
+
+                attr_type = self.valid_dimensions[attribute]
+            elif type == 'metric':
+                # Custom Google Analytics Metrics {ga:goalXXStarts, ga:metricXX, ... }
+                # We always treat them as as strings as we can not be sure of their data type
+                if attribute.startswith('ga:goal') and attribute.endswith(('Starts', 'Completions', 'Value', 'ConversionRate', 'Abandons', 'AbandonRate')):
+                    return 'string'
+                elif attribute.startswith('ga:searchGoal') and attribute.endswith('ConversionRate'):
+                    # Custom Google Analytics Metrics ga:searchGoalXXConversionRate
+                    return 'string'
+                elif attribute.startswith(('ga:metric', 'ga:calcMetric')):
+                    return 'string'
+
+                attr_type = self.valid_metrics[attribute]
+            else:
+                LOGGER.critical(f"Unsuported GA type: {type}")
+                sys.exit(1)
+        except KeyError:
+            LOGGER.critical(f"Unsuported GA {type}: {attribute}")
+            sys.exit(1)
 
         data_type = 'string'
 
