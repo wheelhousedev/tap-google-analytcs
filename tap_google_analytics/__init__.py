@@ -14,7 +14,6 @@ from tap_google_analytics.error import *
 
 REQUIRED_CONFIG_KEYS = [
     "start_date",
-    "key_file_location",
     "view_id"
 ]
 
@@ -130,8 +129,8 @@ def process_args():
         LOGGER.critical("tap-google-analytics: a valid view_id must be provided.")
         sys.exit(1)
 
-    if not args.config.get('key_file_location'):
-        LOGGER.critical("tap-google-analytics: a valid key_file_location must be provided.")
+    if not args.config.get('key_file_location') and not args.config.get('oauth_credentials'):
+        LOGGER.critical("tap-google-analytics: a valid key_file_location string or oauth_credentials object must be provided.")
         sys.exit(1)
 
     # Remove optional args that have empty strings as values
@@ -154,16 +153,36 @@ def process_args():
         LOGGER.critical("tap-google-analytics: start_date '{}' > end_date '{}'".format(start_date, end_date))
         sys.exit(1)
 
-    # Validate that the client_secrets.json file exists and load it
-    if Path(args.config['key_file_location']).is_file():
-        try:
-            args.config['client_secrets'] = load_json(args.config['key_file_location'])
-        except ValueError:
-            LOGGER.critical("tap-google-analytics: The JSON definition in '{}' has errors".format(args.config['key_file_location']))
+    # If using a service account, validate that the client_secrets.json file exists and load it
+    if args.config.get('key_file_location'):
+        if Path(args.config['key_file_location']).is_file():
+            try:
+                args.config['client_secrets'] = load_json(args.config['key_file_location'])
+            except ValueError:
+                LOGGER.critical("tap-google-analytics: The JSON definition in '{}' has errors".format(args.config['key_file_location']))
+                sys.exit(1)
+        else:
+            LOGGER.critical("tap-google-analytics: '{}' file not found".format(args.config['key_file_location']))
             sys.exit(1)
     else:
-        LOGGER.critical("tap-google-analytics: '{}' file not found".format(args.config['key_file_location']))
-        sys.exit(1)
+        # If using oauth credentials, verify that all required keys are present
+        credentials = args.config['oauth_credentials']
+
+        if not credentials.get('access_token'):
+            LOGGER.critical("tap-google-analytics: a valid access_token for the oauth_credentials must be provided.")
+            sys.exit(1)
+
+        if not credentials.get('refresh_token'):
+            LOGGER.critical("tap-google-analytics: a valid refresh_token for the oauth_credentials must be provided.")
+            sys.exit(1)
+
+        if not credentials.get('client_id'):
+            LOGGER.critical("tap-google-analytics: a valid client_id for the oauth_credentials must be provided.")
+            sys.exit(1)
+
+        if not credentials.get('client_secret'):
+            LOGGER.critical("tap-google-analytics: a valid client_secret for the oauth_credentials must be provided.")
+            sys.exit(1)
 
     return args
 

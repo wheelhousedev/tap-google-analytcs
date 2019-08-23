@@ -38,17 +38,25 @@ source venv/bin/activate
 pip install -e .
 ```
 
-## Enable the Analytics Reporting API
+## Authorization Methods
 
-In order for `tap-google-analytics` to access your Google Analytics Account, it needs:
+`tap-google-analytics` supports two different ways of authorization:
+ - Service account based authorization, where an administrator manually creates a service account with the appropriate permissions to view the account, property, and view you wish to fetch data from
+ - OAuth `access_token` based authorization, where this tap gets called with a valid `access_token` and `refresh_token` produced by an OAuth flow conducted in a different system.
 
-- The Analytics Reporting API enabled for your Google Analytics account.
-- A service account with access to the Google Analytics account, property, or view you are going to fetch data from
-- A `client_secrets.json` file provided by Google that allows access to that service account
+If you're setting up `tap-google-analytics` for your own organization and only plan to extract from a handful of different views in the same limited set of properties, Service Account based authorization is the simplest. When you create a service account Google gives you a json file with that service account's credentials called the `client_secrets.json`, and that's all you need to pass to this tap, and you only have to do it once, so this is the recommended way of configuring `tap-google-analytics`.
 
-If you have already done the aforementioned steps and you have a valid `client_secrets.json`, you can skip the rest of this section.
+If you're building something where a wide variety of users need to be able to give access to their Google Analytics, `tap-google-analytics` can use an `access_token` granted by those users to authorize it's requests to Google. This `access_token` is produced by a normal Google OAuth flow, but this flow is outside the scope of `tap-google-analytics`. This is useful if you're integrating `tap-google-analytics` with another system, like Stitch Data might do to allow users to configure their extracts themselves without manual config setup. This tap expects an `access_token`, `refresh_token`, `client_id` and `client_secret` to be passed to it in order to authenticate as the user who granted the token and then access their data.
 
-### Create credentials
+## Required Analytics Reporting APIs & OAuth Scopes
+
+In order for `tap-google-analytics` to access your Google Analytics Account, it needs the Analytics Reporting API *and* the Analytics API (which are two different things) enabled. If using a service account to authorize, these need to be enabled for a project inside the same organization as your Google Analytics account (see below), or if using an OAuth credential set, they need to be enabled for the project the OAuth client ID and secret come from.
+
+If using the OAuth authorization method, the OAuth flow conducted elsewhere must request at minimum the `analytics.readonly` OAuth scope to get an `access_token` authorized to hit these APIs
+
+### Creating service account credentials
+
+If you have already have a valid `client_secrets.json` for a service account, or if you are using OAuth based authorization, you can skip the rest of this section.
 
 As a first step, you need to create or use an existing project in the Google Developers Console:
 
@@ -85,10 +93,12 @@ From this dashboard, you can enable/disable the API for your account, set Quotas
 
 ## Configuration Settings
 
+A sample config for `tap-google-analytics` might look like this:
+
 **sample_config.json**
-```json
+```js
 {
-  "key_file_location": "client_secrets.json",
+  "key_file_location": "client_secrets.json",  // can also use `oauth_credentials`, see below
   "view_id": "123456789",
   "reports": "reports.json",
   "start_date": "2019-05-01T00:00:00Z",
@@ -96,9 +106,7 @@ From this dashboard, you can enable/disable the API for your account, set Quotas
 }
 ```
 
-Required configuration parameters:
-
-- **key_file_location**: path to the `client_secrets.json` file you generated and downloaded during the "Create credentials" step.
+#### Required configuration parameters:
 
 - **view_id**: The ID for the Google Analytics View you want to fetch data from.
 
@@ -106,7 +114,7 @@ Required configuration parameters:
 
 - **start_date**: The earliest date you want to fetch data for
 
-Optional parameters:
+#### Optional parameters:
 
 - **end_date**: The last date for your report (not included). (Default: Today)
 
@@ -119,27 +127,41 @@ Optional parameters:
   "end_date": "2019-06-01T00:00:00Z"
   ```
 
+- **key_file_location**: If using Service Account based authorization, path to the `client_secrets.json` file you generated and downloaded during the "Create credentials" step.
+
+- **oauth_credentials**: If using OAuth based authorization, a nested JSON object with the whole config looking like this:
+
+```json
+{
+  "oauth_credentials": {
+      "access_token": "<ya29.GlxtB_access_token_gobbledegook>",
+      "refresh_token": "<ya29.GlxtB_refresh_tokeN_gobbledegook>",
+      "client_id": "<something.apps.googleusercontent.com>",
+      "client_secret": "<some client secret string>"
+  },
+  "view_id": ...
+}
+```
 
 - **quota_user**: an arbitrary string to use as an identifier for the user this library is being invoked on behalf of. Since the Google Analytics APIs have restrictive call quotas, they have a parameter for the API that allows server side applications like `tap-google-analytics` to make invocations under different users that each have a quota. See https://developers.google.com/analytics/devguides/reporting/core/v4/limits-quotas and https://developers.google.com/analytics/devguides/reporting/core/v4/parameters for more information. This parameter is only necessary if you are running into 429 Too Many Request errors from the GA API when running this tap.
-
 
 - **reports**: path to a file with the definition of the reports to be generated.
 
 If not provided and the tap runs without a `--catalog` also provided, use [tap-google-analytics/defaults/default_report_definition.json](tap-google-analytics/defaults/default_report_definition.json) as the default definition.
 
-The `reports.json` structure is really simple:
+The `reports.json` file structure expected by the `reports` config key is really simple:
 
 **reports.json**
 ```
-[   
+[
   { "name" : "name of stream to be used",
-    "dimensions" : 
+    "dimensions" :
     [
       "Google Analytics Dimension",
       "Another Google Analytics Dimension",
       ... up to 7 dimensions per stream ...
     ],
-    "metrics" : 
+    "metrics" :
     [
       "Google Analytics Metric",
       "Another Google Analytics Metric",
@@ -150,32 +172,32 @@ The `reports.json` structure is really simple:
 
   	... another stream definition ...
   },
-  ... as many streams / reports as the user wants ... 
+  ... as many streams / reports as the user wants ...
 ]
 ```
 
 For example, if you want to extract user stats per day in a users_per_day stream and session stats per day and country in a sessions_per_country_day stream:
 
 ```
-[   
+[
   { "name" : "users_per_day",
-    "dimensions" : 
+    "dimensions" :
     [
       "ga:date"
     ],
-    "metrics" : 
+    "metrics" :
     [
       "ga:users",
       "ga:newUsers"
     ]
-  },   
+  },
   { "name" : "sessions_per_country_day",
-    "dimensions" : 
+    "dimensions" :
     [
       "ga:date",
       "ga:country"
     ],
-    "metrics" : 
+    "metrics" :
     [
       "ga:sessions",
       "ga:sessionsPerUser",
@@ -234,7 +256,7 @@ This tap makes some explicit decisions:
 
 Tap shortcomings (contributions are more than welcome):
 
-- This tap does not currently use any STATE information for incrementally extracting data. This is currently mitigated by allowing for chunked runs using [start_date, end_date), but we should definitely add support for using STATE messages. 
+- This tap does not currently use any STATE information for incrementally extracting data. This is currently mitigated by allowing for chunked runs using [start_date, end_date), but we should definitely add support for using STATE messages.
 
   The difficulty on that front is on dynamically deciding which attributes to use for capturing state for ad-hoc reports that do not include the `ga:date` dimension or other combinations of Time Dimensions.
 
