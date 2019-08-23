@@ -135,10 +135,10 @@ def process_args():
         sys.exit(1)
 
     # Remove optional args that have empty strings as values
-    if not args.config.get('reports'):
+    if 'reports' in args.config and not args.config.get('reports'):
         del args.config['reports']
 
-    if not args.config.get('end_date'):
+    if 'end_date' in args.config and not args.config.get('end_date'):
         del args.config['end_date']
 
     # Process the [start_date, end_date) so that they define an open date window
