@@ -119,11 +119,15 @@ Optional parameters:
   "end_date": "2019-06-01T00:00:00Z"
   ```
 
-- **reports**: path to a file with the definition of the reports to be generated. 
 
-  If not provided and the tap runs without a `--catalog` also provided, use [tap-google-analytics/defaults/default_report_definition.json](tap-google-analytics/defaults/default_report_definition.json) as the default definition. 
+- **quota_user**: an arbitrary string to use as an identifier for the user this library is being invoked on behalf of. Since the Google Analytics APIs have restrictive call quotas, they have a parameter for the API that allows server side applications like `tap-google-analytics` to make invocations under different users that each have a quota. See https://developers.google.com/analytics/devguides/reporting/core/v4/limits-quotas and https://developers.google.com/analytics/devguides/reporting/core/v4/parameters for more information. This parameter is only necessary if you are running into 429 Too Many Request errors from the GA API when running this tap.
 
-The `reports.json` structure is really simple: 
+
+- **reports**: path to a file with the definition of the reports to be generated.
+
+If not provided and the tap runs without a `--catalog` also provided, use [tap-google-analytics/defaults/default_report_definition.json](tap-google-analytics/defaults/default_report_definition.json) as the default definition.
+
+The `reports.json` structure is really simple:
 
 **reports.json**
 ```

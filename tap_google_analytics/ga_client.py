@@ -27,6 +27,7 @@ class GAClient:
         self.view_id = config['view_id']
         self.start_date = config['start_date']
         self.end_date = config['end_date']
+        self.quota_user = config.get('quota_user', None)
 
         self.analytics = self.initialize_analyticsreporting()
 
@@ -72,7 +73,7 @@ class GAClient:
         # (those are not provided in the Analytics Reporting API V4)
         service = build('analytics', 'v3', credentials=credentials)
 
-        results = service.metadata().columns().list(reportType='ga').execute()
+        results = service.metadata().columns().list(reportType='ga', quotaUser=self.quota_user).execute()
 
         columns = results.get('items', [])
 
@@ -200,9 +201,10 @@ class GAClient:
                     'pageSize': '1000',
                     'pageToken': pageToken,
                     'metrics': report_definition['metrics'],
-                    'dimensions': report_definition['dimensions']
+                    'dimensions': report_definition['dimensions'],
                 }]
-            }
+            },
+            quotaUser=self.quota_user
         ).execute()
 
     def process_response(self, response):
