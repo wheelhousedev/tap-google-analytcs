@@ -5,6 +5,7 @@ from apiclient.discovery import build
 from apiclient.errors import HttpError
 
 from oauth2client.service_account import ServiceAccountCredentials
+from oauth2client.client import GoogleCredentials
 
 from tap_google_analytics.error import *
 
@@ -23,15 +24,29 @@ logging.getLogger('googleapiclient.discovery_cache').setLevel(logging.ERROR)
 
 class GAClient:
     def __init__(self, config):
-        self.client_secrets = config['client_secrets']
         self.view_id = config['view_id']
         self.start_date = config['start_date']
         self.end_date = config['end_date']
         self.quota_user = config.get('quota_user', None)
 
+        self.credentials = self.initialize_credentials(config)
         self.analytics = self.initialize_analyticsreporting()
 
         (self.dimensions_ref, self.metrics_ref) = self.fetch_metadata()
+
+    def initialize_credentials(self, config):
+        if 'oauth_credentials' in config:
+            return GoogleCredentials(
+                access_token=config['oauth_credentials']['access_token'],
+                refresh_token=config['oauth_credentials']['refresh_token'],
+                client_id=config['oauth_credentials']['client_id'],
+                client_secret=config['oauth_credentials']['client_secret'],
+                token_expiry=None,  # let the library refresh the token if it is expired
+                token_uri="https://accounts.google.com/o/oauth2/token",
+                user_agent="tap-google-analytics (via singer.io)"
+            )
+        else:
+            return ServiceAccountCredentials.from_json_keyfile_dict(config['client_secrets'], SCOPES)
 
     def initialize_analyticsreporting(self):
         """Initializes an Analytics Reporting API V4 service object.
@@ -39,13 +54,7 @@ class GAClient:
         Returns:
             An authorized Analytics Reporting API V4 service object.
         """
-        credentials = ServiceAccountCredentials.from_json_keyfile_dict(
-                self.client_secrets, SCOPES)
-
-        # Build the service object.
-        analytics = build('analyticsreporting', 'v4', credentials=credentials)
-
-        return analytics
+        return build('analyticsreporting', 'v4', credentials=self.credentials)
 
     def fetch_metadata(self):
         """
@@ -64,14 +73,11 @@ class GAClient:
         metrics = {}
         dimensions = {}
 
-        credentials = ServiceAccountCredentials.from_json_keyfile_dict(
-                self.client_secrets, SCOPES)
-
         # Initialize a Google Analytics API V3 service object and build the service object.
         # This is needed in order to dynamically fetch the metadata for available
         #   metrics and dimensions.
         # (those are not provided in the Analytics Reporting API V4)
-        service = build('analytics', 'v3', credentials=credentials)
+        service = build('analytics', 'v3', credentials=self.credentials)
 
         results = service.metadata().columns().list(reportType='ga', quotaUser=self.quota_user).execute()
 
