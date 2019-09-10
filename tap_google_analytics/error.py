@@ -13,5 +13,8 @@ class TapGaRateLimitError(TapGaApiError):
 class TapGaQuotaExceededError(TapGaApiError):
     """Exception for Quota Exceeded errors."""
 
+class TapGaBackendServerError(TapGaApiError):
+    """Exception for 500 and 503 backend errors that are Google's fault"""
+
 class TapGaUnknownError(TapGaApiError):
-    """Exception for 5XX and other unknown errors."""
+    """Exception for unknown errors."""
