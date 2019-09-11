@@ -1,5 +1,8 @@
+import sys
 import backoff
 import logging
+import json
+import singer
 
 from apiclient.discovery import build
 from apiclient.errors import HttpError
@@ -13,6 +16,7 @@ SCOPES = ['https://www.googleapis.com/auth/analytics.readonly']
 
 NON_FATAL_ERRORS = [
   'userRateLimitExceeded',
+  'rateLimitExceeded',
   'quotaExceeded',
   'internalServerError',
   'backendError'
@@ -20,6 +24,24 @@ NON_FATAL_ERRORS = [
 
 # Silence the discovery_cache errors
 logging.getLogger('googleapiclient.discovery_cache').setLevel(logging.ERROR)
+LOGGER = singer.get_logger()
+
+
+def error_reason(e):
+    # For a given HttpError object from the googleapiclient package, this returns the first reason code from
+    # https://developers.google.com/analytics/devguides/reporting/core/v4/errors if the error's HTTP response
+    # body is valid json. Note that the code samples for Python on that page are actually incorrect, and that
+    # e.resp.reason is the HTTP transport level reason associated with the status code, like "Too Many Requests"
+    # for a 429 response code, whereas we want the reason field of the first error in the JSON response body.
+
+    reason = ''
+    try:
+        data = json.loads(e.content.decode('utf-8'))
+        reason = data['error']['errors'][0]['reason']
+    except Exception:
+        pass
+
+    return reason
 
 
 class GAClient:
@@ -158,14 +180,17 @@ class GAClient:
             # Use list of errors defined in:
             # https://developers.google.com/analytics/devguides/reporting/core/v4/errors
 
-            if e.resp.reason == 'userRateLimitExceeded':
+            reason = error_reason(e)
+            if reason == 'userRateLimitExceeded' or reason == 'rateLimitExceeded':
                 raise TapGaRateLimitError(e._get_reason())
-            elif e.resp.reason == 'quotaExceeded':
+            elif reason == 'quotaExceeded':
                 raise TapGaQuotaExceededError(e._get_reason())
             elif e.resp.status == 400:
                 raise TapGaInvalidArgumentError(e._get_reason())
             elif e.resp.status in [401, 402]:
                 raise TapGaAuthenticationError(e._get_reason())
+            elif e.resp.status in [500, 503]:
+                raise TapGaBackendServerError(e._get_reason())
             else:
                 raise TapGaUnknownError(e._get_reason())
 
@@ -183,15 +208,21 @@ class GAClient:
 
         return report_definition
 
+
+
     def fatal_code(error):
         # Use list of errors defined in:
         # https://developers.google.com/analytics/devguides/reporting/core/v4/errors
-        return error.resp.reason not in NON_FATAL_ERRORS
+        return error.resp.status not in [500, 503] and error_reason(error) not in NON_FATAL_ERRORS
+
+    def backoff_handler(details):
+        LOGGER.info("Received 429 -- sleeping for %s seconds", details['wait'])
 
     @backoff.on_exception(backoff.expo,
                           HttpError,
                           max_tries=5,
-                          giveup=fatal_code)
+                          giveup=fatal_code,
+                          on_backoff=backoff_handler)
     def query_api(self, report_definition, pageToken=None):
         """Queries the Analytics Reporting API V4.
 
