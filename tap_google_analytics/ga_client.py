@@ -45,6 +45,21 @@ def error_reason(e):
     return reason
 
 
+def is_fatal_error(error):
+    status = error.resp.status if getattr(error, 'resp') is not None else None
+    if status in [500, 503]:
+        return False
+
+    # Use list of errors defined in:
+    # https://developers.google.com/analytics/devguides/reporting/core/v4/errors
+    reason = error_reason(error)
+    if reason in NON_FATAL_ERRORS:
+        return False
+
+    LOGGER.critical("Received fatal error %s, reason=%s, status=%s", error, reason, status)
+    return True
+
+
 class GAClient:
     def __init__(self, config):
         self.view_id = config['view_id']
@@ -209,21 +224,10 @@ class GAClient:
 
         return report_definition
 
-
-
-    def fatal_code(error):
-        # Use list of errors defined in:
-        # https://developers.google.com/analytics/devguides/reporting/core/v4/errors
-        return error.resp.status not in [500, 503] and error_reason(error) not in NON_FATAL_ERRORS
-
-    def backoff_handler(details):
-        LOGGER.info("Received 429 -- sleeping for %s seconds", details['wait'])
-
     @backoff.on_exception(backoff.expo,
                           (HttpError, socket.timeout),
                           max_tries=5,
-                          giveup=fatal_code,
-                          on_backoff=backoff_handler)
+                          giveup=is_fatal_error)
     def query_api(self, report_definition, pageToken=None):
         """Queries the Analytics Reporting API V4.
 
