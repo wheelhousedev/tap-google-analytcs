@@ -3,6 +3,7 @@ import backoff
 import logging
 import json
 import singer
+import socket
 
 from apiclient.discovery import build
 from apiclient.errors import HttpError
@@ -219,7 +220,7 @@ class GAClient:
         LOGGER.info("Received 429 -- sleeping for %s seconds", details['wait'])
 
     @backoff.on_exception(backoff.expo,
-                          HttpError,
+                          (HttpError, socket.timeout),
                           max_tries=5,
                           giveup=fatal_code,
                           on_backoff=backoff_handler)
