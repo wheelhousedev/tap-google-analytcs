@@ -12,7 +12,7 @@ As the Google Analytics Reports are defined dynamically and there are practicall
 
 The difference of `tap-google-analytics` to a database tap is that the Catalog (available entities/streams and their schema) is dynamic but not available to be discovered at run time by connecting to the Data Source. It must be dynamically generated based on the reports the user wants to generate by connecting to the Google Analytics Reporting API.
 
-To that end, this tap uses an additional JSON file for the definition of the reports that the user wants to be generated. You can check, as an example, the JSON file used as a default in [tap-google-analytics/defaults/default_report_definition.json](tap-google-analytics/defaults/default_report_definition.json). Those report definitions could be part of the `config.json`, but we prefer to keep `config.json` small and clean and provide the definitions by using an additional file.
+To that end, this tap uses an additional JSON file for the definition of the reports that the user wants to be generated. You can check, as an example, the JSON file used as a default in [tap-google-analytics/defaults/default_report_definition.json](https://gitlab.com/meltano/tap-google-analytics/blob/master/tap_google_analytics/defaults/default_report_definition.json). Those report definitions could be part of the `config.json`, but we prefer to keep `config.json` small and clean and provide the definitions by using an additional file.
 
 Based on the report(s) definition, it generates a valid Catalog that follows the [Singer spec](https://github.com/singer-io/getting-started/blob/master/SPEC.md).
 
