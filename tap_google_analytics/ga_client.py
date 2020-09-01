@@ -76,7 +76,7 @@ class GAClient:
         (self.dimensions_ref, self.metrics_ref) = self.fetch_metadata()
 
     def initialize_credentials(self, config):
-        if 'oauth_credentials' in config:
+        if config.get('oauth_credentials', {}).get('access_token', {}):
             return GoogleCredentials(
                 access_token=config['oauth_credentials']['access_token'],
                 refresh_token=config['oauth_credentials']['refresh_token'],
