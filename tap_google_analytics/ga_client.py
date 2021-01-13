@@ -79,7 +79,7 @@ class GAClient:
 
     def initialize_credentials(self, config):
         if config.get('oauth_credentials', {}).get('refresh_token', None):
-            r = req.post('', json={"client_id": config['oauth_credentials']['client_id'],
+            r = req.post('https://www.googleapis.com/oauth2/v4/token', json={"client_id": config['oauth_credentials']['client_id'],
                                    "client_secret": config['oauth_credentials']['client_secret'],
                                    "refresh_token": config['oauth_credentials']['refresh_token'],
                                    "grant_type": 'refresh_token'
