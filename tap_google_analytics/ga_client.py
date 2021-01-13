@@ -9,6 +9,7 @@ import requests as req
 from apiclient.discovery import build
 from apiclient.errors import HttpError
 
+# TODO: oath2client is deprecated, refactor to google-auth
 from oauth2client.service_account import ServiceAccountCredentials
 from oauth2client.client import GoogleCredentials
 
