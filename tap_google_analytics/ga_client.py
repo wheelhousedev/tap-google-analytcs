@@ -87,7 +87,7 @@ class GAClient:
                          )
             r = r.json()
             return GoogleCredentials(
-                access_token=r.data.access_token,
+                access_token=r.access_token,
                 refresh_token=config['oauth_credentials']['refresh_token'],
                 client_id=config['oauth_credentials']['client_id'],
                 client_secret=config['oauth_credentials']['client_secret'],
