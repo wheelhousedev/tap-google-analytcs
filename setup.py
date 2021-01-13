@@ -4,10 +4,10 @@ from setuptools import setup
 setup(
     name="tap-google-analytics",
     version="0.1.2",
-    description="Singer.io tap for extracting data from the Google Analytics Reporting API",
-    author='Meltano Team & Contributors',
-    author_email="meltano@gitlab.com",
-    url="https://gitlab.com/meltano/tap-google-analytics",
+    description="Wheelhouse DMG fork of Meltano's Google Analytics tap",
+    author='Aditya Sastry, Meltano Team & Contributors',
+    author_email="aditya@wheelhousedmg.com",
+    url="ssh://git@github.com/wheelhousedev/tap-google-analytcs.git",
     classifiers=["Programming Language :: Python :: 3 :: Only"],
     py_modules=["tap_google_analytics"],
     install_requires=[
@@ -15,6 +15,7 @@ setup(
         "google-api-python-client==1.7.9",
         "oauth2client==4.1.3",
         "backoff==1.3.2"
+        "requests==2.25.1"
     ],
     entry_points="""
     [console_scripts]

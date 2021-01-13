@@ -4,6 +4,7 @@ import logging
 import json
 import singer
 import socket
+import requests
 
 from apiclient.discovery import build
 from apiclient.errors import HttpError
@@ -16,11 +17,11 @@ from tap_google_analytics.error import *
 SCOPES = ['https://www.googleapis.com/auth/analytics.readonly']
 
 NON_FATAL_ERRORS = [
-  'userRateLimitExceeded',
-  'rateLimitExceeded',
-  'quotaExceeded',
-  'internalServerError',
-  'backendError'
+    'userRateLimitExceeded',
+    'rateLimitExceeded',
+    'quotaExceeded',
+    'internalServerError',
+    'backendError'
 ]
 
 # Silence the discovery_cache errors
@@ -59,7 +60,8 @@ def is_fatal_error(error):
     if reason in NON_FATAL_ERRORS:
         return False
 
-    LOGGER.critical("Received fatal error %s, reason=%s, status=%s", error, reason, status)
+    LOGGER.critical(
+        "Received fatal error %s, reason=%s, status=%s", error, reason, status)
     return True
 
 
@@ -76,9 +78,16 @@ class GAClient:
         (self.dimensions_ref, self.metrics_ref) = self.fetch_metadata()
 
     def initialize_credentials(self, config):
-        if config.get('oauth_credentials', {}).get('access_token', None):
+        if config.get('oauth_credentials', {}).get('refresh_token', None):
+            r = req.post('', json={"client_id": config['oauth_credentials']['client_id'],
+                                   "client_secret": config['oauth_credentials']['client_secret'],
+                                   "refresh_token": config['oauth_credentials']['refresh_token'],
+                                   "grant_type": 'refresh_token'
+                                   }
+                         )
+            r = r.json()
             return GoogleCredentials(
-                access_token=config['oauth_credentials']['access_token'],
+                access_token=r.data.access_token,
                 refresh_token=config['oauth_credentials']['refresh_token'],
                 client_id=config['oauth_credentials']['client_id'],
                 client_secret=config['oauth_credentials']['client_secret'],
@@ -120,7 +129,8 @@ class GAClient:
         # (those are not provided in the Analytics Reporting API V4)
         service = build('analytics', 'v3', credentials=self.credentials)
 
-        results = service.metadata().columns().list(reportType='ga', quotaUser=self.quota_user).execute()
+        results = service.metadata().columns().list(
+            reportType='ga', quotaUser=self.quota_user).execute()
 
         columns = results.get('items', [])
 
@@ -220,10 +230,12 @@ class GAClient:
         }
 
         for dimension in stream['dimensions']:
-            report_definition['dimensions'].append({'name': dimension.replace("ga_","ga:")})
+            report_definition['dimensions'].append(
+                {'name': dimension.replace("ga_", "ga:")})
 
         for metric in stream['metrics']:
-            report_definition['metrics'].append({"expression": metric.replace("ga_","ga:")})
+            report_definition['metrics'].append(
+                {"expression": metric.replace("ga_", "ga:")})
 
         return report_definition
 
@@ -240,14 +252,14 @@ class GAClient:
         return self.analytics.reports().batchGet(
             body={
                 'reportRequests': [
-                {
-                    'viewId': self.view_id,
-                    'dateRanges': [{'startDate': self.start_date, 'endDate': self.end_date}],
-                    'pageSize': '1000',
-                    'pageToken': pageToken,
-                    'metrics': report_definition['metrics'],
-                    'dimensions': report_definition['dimensions'],
-                }]
+                    {
+                        'viewId': self.view_id,
+                        'dateRanges': [{'startDate': self.start_date, 'endDate': self.end_date}],
+                        'pageSize': '1000',
+                        'pageToken': pageToken,
+                        'metrics': report_definition['metrics'],
+                        'dimensions': report_definition['dimensions'],
+                    }]
             },
             quotaUser=self.quota_user
         ).execute()
@@ -278,7 +290,8 @@ class GAClient:
 
             columnHeader = report.get('columnHeader', {})
             dimensionHeaders = columnHeader.get('dimensions', [])
-            metricHeaders = columnHeader.get('metricHeader', {}).get('metricHeaderEntries', [])
+            metricHeaders = columnHeader.get(
+                'metricHeader', {}).get('metricHeaderEntries', [])
 
             for row in report.get('data', {}).get('rows', []):
                 record = {}
@@ -295,19 +308,20 @@ class GAClient:
                     else:
                         value = dimension
 
-                    record[header.replace("ga:","ga_")] = value
+                    record[header.replace("ga:", "ga_")] = value
 
                 for i, values in enumerate(dateRangeValues):
                     for metricHeader, value in zip(metricHeaders, values.get('values')):
                         metric_name = metricHeader.get('name')
-                        metric_type = self.lookup_data_type('metric', metric_name)
+                        metric_type = self.lookup_data_type(
+                            'metric', metric_name)
 
                         if metric_type == 'integer':
                             value = int(value)
                         elif metric_type == 'number':
                             value = float(value)
 
-                        record[metric_name.replace("ga:","ga_")] = value
+                        record[metric_name.replace("ga:", "ga_")] = value
 
                 # Also add the [start_date,end_date) used for the report
                 record['report_start_date'] = self.start_date
