@@ -168,9 +168,9 @@ def process_args():
         # If using oauth credentials, verify that all required keys are present
         credentials = args.config['oauth_credentials']
 
-        if not credentials.get('access_token'):
-            LOGGER.critical("tap-google-analytics: a valid access_token for the oauth_credentials must be provided.")
-            sys.exit(1)
+        # if not credentials.get('access_token'):
+        #     LOGGER.critical("tap-google-analytics: a valid access_token for the oauth_credentials must be provided.")
+        #     sys.exit(1)
 
         if not credentials.get('refresh_token'):
             LOGGER.critical("tap-google-analytics: a valid refresh_token for the oauth_credentials must be provided.")
