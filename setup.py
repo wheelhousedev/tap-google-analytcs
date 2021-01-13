@@ -14,7 +14,7 @@ setup(
         "singer-python==5.6.1",
         "google-api-python-client==1.7.9",
         "oauth2client==4.1.3",
-        "backoff==1.3.2"
+        "backoff==1.3.2",
         "requests==2.25.1"
     ],
     entry_points="""
