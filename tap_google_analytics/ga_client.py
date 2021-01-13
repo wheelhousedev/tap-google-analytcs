@@ -250,6 +250,7 @@ class GAClient:
         Returns:
             The Analytics Reporting API V4 response.
         """
+        # TODO: Handle sampling
         return self.analytics.reports().batchGet(
             body={
                 'reportRequests': [
