@@ -4,7 +4,7 @@ import logging
 import json
 import singer
 import socket
-import requests
+import requests as req
 
 from apiclient.discovery import build
 from apiclient.errors import HttpError
