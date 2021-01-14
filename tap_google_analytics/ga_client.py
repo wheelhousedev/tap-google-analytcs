@@ -213,7 +213,7 @@ class GAClient:
                 LOGGER.info("Breaking request into {} daily chunks".format(num_periods))
                 for period in range(num_periods):
                     adj_start_date = start_date + datetime.timedelta(days=period)
-                    adj_end_date = end_date + datetime.timedelta(days=(period+1))
+                    adj_end_date = start_date + datetime.timedelta(days=(period+1))
                     while True:
                         nextPageToken = None
                         response = self.query_api(report_definition, datetime.datetime.strftime(adj_start_date, '%Y-%m-%d'), datetime.datetime.strftime(adj_end_date, '%Y-%m-%d'), nextPageToken)
