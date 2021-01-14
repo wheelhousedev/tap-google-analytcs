@@ -221,6 +221,8 @@ class GAClient:
                         nextPageToken = None
                         response = self.query_api(report_definition, datetime.datetime.strftime(adj_start_date, '%Y-%m-%d'), datetime.datetime.strftime(adj_end_date, '%Y-%m-%d'), nextPageToken)
                         (nextPageToken, results) = self.process_response(response)
+                        if track_page > 1:
+                            print(results)
                         records.extend(results)
 
                         if nextPageToken is None:
