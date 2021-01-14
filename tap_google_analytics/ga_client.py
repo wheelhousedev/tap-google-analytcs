@@ -207,7 +207,7 @@ class GAClient:
 
                     if nextPageToken is None:
                         break
-            elif self.request_period == "daily":
+            elif self.request_period == "day":
                 start_date = datetime.strptime(self.start_date, '%Y-%m-%d')
                 end_date = datetime.strptime(self.start_date, '%Y-%m-%d')
                 num_periods = ( start_date - end_date ).days - 2
