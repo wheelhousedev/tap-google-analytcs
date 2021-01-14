@@ -209,7 +209,7 @@ class GAClient:
             elif self.request_period == "day":
                 start_date = datetime.datetime.strptime(self.start_date, '%Y-%m-%d')
                 end_date = datetime.datetime.strptime(self.end_date, '%Y-%m-%d')
-                num_periods = ( end_date - start_date ).days - 1
+                num_periods = ( end_date - start_date ).days
                 LOGGER.info("Breaking request into {} daily chunks".format(num_periods))
                 for offset in range(num_periods):
                     adj_start_date = start_date + datetime.timedelta(days=offset)
