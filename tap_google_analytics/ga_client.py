@@ -215,6 +215,7 @@ class GAClient:
                     adj_start_date = start_date + datetime.timedelta(days=period)
                     adj_end_date = end_date + datetime.timedelta(days=(period+1))
                     while True:
+                        nextPageToken = None
                         response = self.query_api(report_definition, datetime.datetime.strftime(adj_start_date, '%Y-%m-%d'), datetime.datetime.strftime(adj_end_date, '%Y-%m-%d'), nextPageToken)
                         (nextPageToken, results) = self.process_response(response)
                         records.extend(results)
