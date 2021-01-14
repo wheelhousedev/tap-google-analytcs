@@ -5,6 +5,7 @@ import json
 import singer
 import socket
 import requests as req
+from datetime import datetime
 
 from apiclient.discovery import build
 from apiclient.errors import HttpError
@@ -74,7 +75,7 @@ class GAClient:
         self.start_date = config['start_date']
         self.end_date = config['end_date']
         self.quota_user = config.get('quota_user', None)
-
+        self.request_period = config.get('request_period')
         self.credentials = self.initialize_credentials(config)
         self.analytics = self.initialize_analyticsreporting()
 
@@ -196,18 +197,34 @@ class GAClient:
         try:
             records = []
             report_definition = self.generate_report_definition(stream)
-            nextPageToken = None
+            if self.request_period == "full":
+                nextPageToken = None
+                while True:
+                    response = self.query_api(report_definition, self.start_date, self.end_date, nextPageToken)
+                    (nextPageToken, results) = self.process_response(response)
+                    records.extend(results)
 
-            while True:
-                response = self.query_api(report_definition, nextPageToken)
-                (nextPageToken, results) = self.process_response(response)
-                records.extend(results)
+                    if nextPageToken is None:
+                        break
+            elif self.request_period == "daily":
+                start_date = datetime.strptime(self.start_date, '%Y-%m-%d')
+                end_date = datetime.strptime(self.start_date, '%Y-%m-%d')
+                num_periods = ( start_date - end_date ).days - 2
+                for period in range(num_periods):
+                    adj_start_date = start_date + datetime.timedelta(days=period)
+                    adj_end_date = end_date + datetime.timedelta(days=(period+1))
+                    while True:
+                        response = self.query_api(report_definition, datetime.strftime(adj_start_date, '%Y-%m-%d'), datetime.strftime(adj_end_date, '%Y-%m-%d'), nextPageToken)
+                        (nextPageToken, results) = self.process_response(response)
+                        records.extend(results)
 
-                # Keep on looping as long as we have a nextPageToken
-                if nextPageToken is None:
-                    break
-
+                        if nextPageToken is None:
+                            break
+            else:
+                LOGGER.critical(
+                        "Process stream failure, else fallthrough")        
             return records
+
         except HttpError as e:
             # Process API errors
             # Use list of errors defined in:
@@ -247,7 +264,7 @@ class GAClient:
                           (HttpError, socket.timeout),
                           max_tries=9,
                           giveup=is_fatal_error)
-    def query_api(self, report_definition, pageToken=None):
+    def query_api(self, report_definition, start_date, end_date, pageToken=None):
         """Queries the Analytics Reporting API V4.
 
         Returns:
@@ -259,7 +276,7 @@ class GAClient:
                 'reportRequests': [
                     {
                         'viewId': self.view_id,
-                        'dateRanges': [{'startDate': self.start_date, 'endDate': self.end_date}],
+                        'dateRanges': [{'startDate': start_date, 'endDate': end_date}],
                         'pageSize': '1000',
                         'pageToken': pageToken,
                         'metrics': report_definition['metrics'],

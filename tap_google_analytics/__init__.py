@@ -155,8 +155,9 @@ def process_args():
 
 
     # Handle default request period
-    valid_request_periods = ["day", "week", "month", "total"]
-    request_period = args.config.get('request_period', "total")
+    # TODO: add support for other periods
+    valid_request_periods = ["day", "full"]
+    request_period = args.config.get('request_period', "full")
     if request_period not in valid_request_periods:
         LOGGER.critical("tap-google-analytics: invalid request_period '{}' > end_date '{}'".format(request_period, valid_request_periods))
         sys.exit(1)        
