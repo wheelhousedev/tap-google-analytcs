@@ -5,7 +5,7 @@ import json
 import singer
 import socket
 import requests as req
-from datetime import datetime
+import datetime
 
 from apiclient.discovery import build
 from apiclient.errors import HttpError
@@ -207,15 +207,15 @@ class GAClient:
                     if nextPageToken is None:
                         break
             elif self.request_period == "day":
-                start_date = datetime.strptime(self.start_date, '%Y-%m-%d')
-                end_date = datetime.strptime(self.end_date, '%Y-%m-%d')
+                start_date = datetime.datetime.strptime(self.start_date, '%Y-%m-%d')
+                end_date = datetime.datetime.strptime(self.end_date, '%Y-%m-%d')
                 num_periods = ( end_date - start_date ).days - 1
                 LOGGER.info("Breaking request into {} daily chunks".format(num_periods))
                 for period in range(num_periods):
                     adj_start_date = start_date + datetime.timedelta(days=period)
                     adj_end_date = end_date + datetime.timedelta(days=(period+1))
                     while True:
-                        response = self.query_api(report_definition, datetime.strftime(adj_start_date, '%Y-%m-%d'), datetime.strftime(adj_end_date, '%Y-%m-%d'), nextPageToken)
+                        response = self.query_api(report_definition, datetime.datetime.strftime(adj_start_date, '%Y-%m-%d'), datetime.datetime.strftime(adj_end_date, '%Y-%m-%d'), nextPageToken)
                         (nextPageToken, results) = self.process_response(response)
                         records.extend(results)
 
