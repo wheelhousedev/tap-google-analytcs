@@ -178,6 +178,7 @@ def process_args():
         sys.exit(1)
     
     if request_period == "day" and (end_date - start_date).days <= 1 or request_period == "week" and (end_date - start_date).days <= 7 or request_period == "month" and (end_date - start_date).days <= 31  :
+        LOGGER.info("Request period is less than or equal to the date range, switching to FULL period.")
         args.request_period = "full"
 
     # If using a service account, validate that the client_secrets.json file exists and load it
