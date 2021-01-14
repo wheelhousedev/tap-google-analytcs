@@ -75,7 +75,8 @@ class GAClient:
         self.start_date = config['start_date']
         self.end_date = config['end_date']
         self.quota_user = config.get('quota_user', None)
-        self.request_period = config.get('request_period')
+        self.request_period = config['request_period']
+        print(self.request_period)
         self.credentials = self.initialize_credentials(config)
         self.analytics = self.initialize_analyticsreporting()
 
