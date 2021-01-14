@@ -69,6 +69,8 @@ def is_fatal_error(error):
 class GAClient:
     def __init__(self, config):
         self.view_id = config['view_id']
+        self.property_id = config['property_id']
+        self.account_id = config['account_id']
         self.start_date = config['start_date']
         self.end_date = config['end_date']
         self.quota_user = config.get('quota_user', None)
@@ -329,6 +331,10 @@ class GAClient:
                 # Also add the [start_date,end_date) used for the report
                 record['report_start_date'] = self.start_date
                 record['report_end_date'] = self.end_date
+                record['view_id'] = self.view_id
+                # TODO: extract property and account dynamically
+                record['property_id'] = self.property_id
+                record['account_id'] = self.account_id
 
                 results.append(record)
 

@@ -14,7 +14,9 @@ from tap_google_analytics.error import *
 
 REQUIRED_CONFIG_KEYS = [
     "start_date",
-    "view_id"
+    "view_id",
+    "property_id",
+    "account_id"
 ]
 
 LOGGER = singer.get_logger()
@@ -127,6 +129,14 @@ def process_args():
 
     if not args.config.get('view_id'):
         LOGGER.critical("tap-google-analytics: a valid view_id must be provided.")
+        sys.exit(1)
+
+    if not args.config.get('property_id'):
+        LOGGER.critical("tap-google-analytics: a valid property_id must be provided.")
+        sys.exit(1)
+
+    if not args.config.get('account_id'):
+        LOGGER.critical("tap-google-analytics: a valid account_id must be provided.")
         sys.exit(1)
 
     if not args.config.get('key_file_location') and not args.config.get('oauth_credentials'):
