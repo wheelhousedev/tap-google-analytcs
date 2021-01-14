@@ -125,6 +125,17 @@ class ReportsHelper:
                 "type": ["string"],
             }
 
+            # Add account metadata params
+            schema['properties']['view_id'] = {
+                "type": ["string"],
+            }
+            schema['properties']['property_id'] = {
+                "type": ["string"],
+            }
+            schema['properties']['account_id'] = {
+                "type": ["string"],
+            }
+
             # If 'ga:date' has not been added as a Dimension, add the
             #  {start_date, end_date} params as keys
             if not date_dimension_included:
