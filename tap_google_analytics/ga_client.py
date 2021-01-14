@@ -223,6 +223,7 @@ class GAClient:
                         (nextPageToken, results) = self.process_response(response)
                         if track_page > 1:
                             print(response)
+                            print(nextPageToken)
                         records.extend(results)
 
                         if nextPageToken is None:
