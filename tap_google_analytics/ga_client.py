@@ -311,7 +311,7 @@ class GAClient:
                     else:
                         value = dimension
 
-                    record[header.replace("ga:", "ga_")] = value
+                    record[header.replace("ga:", "dim_")] = value
 
                 for i, values in enumerate(dateRangeValues):
                     for metricHeader, value in zip(metricHeaders, values.get('values')):
@@ -324,7 +324,7 @@ class GAClient:
                         elif metric_type == 'number':
                             value = float(value)
 
-                        record[metric_name.replace("ga:", "ga_")] = value
+                        record[metric_name.replace("ga:", "met_")] = value
 
                 # Also add the [start_date,end_date) used for the report
                 record['report_start_date'] = self.start_date
