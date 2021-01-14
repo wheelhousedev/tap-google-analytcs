@@ -273,7 +273,7 @@ class GAClient:
             The Analytics Reporting API V4 response.
         """
         # TODO: Handle sampling
-        LOGGER.debug(f'Working on ${start_date} to ${end_date}')
+        LOGGER.info(f'Working on ${start_date} to ${end_date}')
         return self.analytics.reports().batchGet(
             body={
                 'reportRequests': [
