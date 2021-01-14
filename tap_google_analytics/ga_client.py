@@ -336,6 +336,7 @@ class GAClient:
                 record['property_id'] = self.property_id
                 record['account_id'] = self.account_id
 
+
                 results.append(record)
 
             return (report.get('nextPageToken'), results)
