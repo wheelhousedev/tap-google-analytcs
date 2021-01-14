@@ -214,7 +214,10 @@ class GAClient:
                 for offset in range(num_periods):
                     adj_start_date = start_date + datetime.timedelta(days=offset)
                     adj_end_date = start_date + datetime.timedelta(days=(offset+1))
+                    track_page = 0
                     while True:
+                        LOGGER.info(f'Working on ${datetime.datetime.strftime(adj_start_date, '%Y-%m-%d')} to ${datetime.datetime.strftime(adj_end_date, '%Y-%m-%d')} page ${track_page}')
+                        track_page += 1
                         nextPageToken = None
                         response = self.query_api(report_definition, datetime.datetime.strftime(adj_start_date, '%Y-%m-%d'), datetime.datetime.strftime(adj_end_date, '%Y-%m-%d'), nextPageToken)
                         (nextPageToken, results) = self.process_response(response)
@@ -273,7 +276,6 @@ class GAClient:
             The Analytics Reporting API V4 response.
         """
         # TODO: Handle sampling
-        LOGGER.info(f'Working on ${start_date} to ${end_date}')
         return self.analytics.reports().batchGet(
             body={
                 'reportRequests': [
