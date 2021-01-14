@@ -216,7 +216,7 @@ class GAClient:
                     adj_end_date = start_date + datetime.timedelta(days=(offset+1))
                     track_page = 0
                     while True:
-                        LOGGER.info(f'Working on ${datetime.datetime.strftime(adj_start_date, '%Y-%m-%d')} to ${datetime.datetime.strftime(adj_end_date, '%Y-%m-%d')} page ${track_page}')
+                        LOGGER.info(f'Working on {datetime.datetime.strftime(adj_start_date, "%Y-%m-%d")} to {datetime.datetime.strftime(adj_end_date, "%Y-%m-%d")} page ${track_page}')
                         track_page += 1
                         nextPageToken = None
                         response = self.query_api(report_definition, datetime.datetime.strftime(adj_start_date, '%Y-%m-%d'), datetime.datetime.strftime(adj_end_date, '%Y-%m-%d'), nextPageToken)
