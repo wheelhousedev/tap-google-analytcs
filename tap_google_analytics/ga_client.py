@@ -224,7 +224,7 @@ class GAClient:
                             break
             else:
                 LOGGER.critical(
-                        "Process stream failure, else fallthrough")        
+                        "Process stream failure, invalid date")        
             return records
 
         except HttpError as e:
