@@ -233,11 +233,11 @@ class GAClient:
 
         for dimension in stream['dimensions']:
             report_definition['dimensions'].append(
-                {'name': dimension.replace("ga_", "ga:")})
+                {'name': dimension.replace("ga_dim_", "ga:")})
 
         for metric in stream['metrics']:
             report_definition['metrics'].append(
-                {"expression": metric.replace("ga_", "ga:")})
+                {"expression": metric.replace("ga_met_", "ga:")})
 
         return report_definition
 
