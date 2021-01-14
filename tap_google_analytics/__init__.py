@@ -150,6 +150,20 @@ def process_args():
     if 'end_date' in args.config and not args.config.get('end_date'):
         del args.config['end_date']
 
+    if 'request_period' in args.config and not args.config.get('request_period'):
+            del args.config['request_period']
+
+
+    # Handle default request period
+    # TODO: add support for other periods
+    valid_request_periods = ["day", "full"]
+    request_period = args.config.get('request_period', "full")
+    if request_period not in valid_request_periods:
+        LOGGER.critical("tap-google-analytics: invalid request_period '{}' > end_date '{}'".format(request_period, valid_request_periods))
+        sys.exit(1)        
+            
+    args.request_period = request_period
+
     # Process the [start_date, end_date) so that they define an open date window
     # that ends yesterday if end_date is not defined
     start_date = utils.strptime_to_utc(args.config['start_date'])
