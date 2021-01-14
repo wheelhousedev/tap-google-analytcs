@@ -81,7 +81,7 @@ class ReportsHelper:
                     date_dimension_included = True
 
                 data_type = self.client.lookup_data_type('dimension', dimension)
-                dimension = dimension.replace("ga:","ga_")
+                dimension = dimension.replace("ga:","dim_")
                 schema['properties'][dimension] = {
                     "type": [data_type],
                 }
@@ -100,7 +100,7 @@ class ReportsHelper:
             # Add the metrics to the schema
             for metric in report['metrics']:
                 data_type = self.client.lookup_data_type('metric', metric)
-                metric = metric.replace("ga:","ga_")
+                metric = metric.replace("ga:","met_")
 
                 schema['properties'][metric] = {
                     # metrics are allowed to also have null values
