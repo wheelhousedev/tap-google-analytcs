@@ -150,6 +150,20 @@ def process_args():
     if 'end_date' in args.config and not args.config.get('end_date'):
         del args.config['end_date']
 
+    if 'request_period' in args.config and not args.config.get('request_period'):
+            del args.config['request_period']
+
+
+    # Handle default request period
+    # TODO: add support for other periods
+    valid_request_periods = ["day", "week", "month", "full"]
+    request_period = args.config.get('request_period', "full")
+    if request_period not in valid_request_periods:
+        LOGGER.critical("tap-google-analytics: invalid request_period '{}' > end_date '{}'".format(request_period, valid_request_periods))
+        sys.exit(1)        
+            
+    args.request_period = request_period
+
     # Process the [start_date, end_date) so that they define an open date window
     # that ends yesterday if end_date is not defined
     start_date = utils.strptime_to_utc(args.config['start_date'])
@@ -162,6 +176,10 @@ def process_args():
     if end_date < start_date:
         LOGGER.critical("tap-google-analytics: start_date '{}' > end_date '{}'".format(start_date, end_date))
         sys.exit(1)
+    
+    if request_period == "day" and (end_date - start_date).days <= 1 or request_period == "week" and (end_date - start_date).days <= 7 or request_period == "month" and (end_date - start_date).days <= 31  :
+        LOGGER.info("Request period is less than or equal to the date range, switching to FULL period")
+        args.request_period = "full"
 
     # If using a service account, validate that the client_secrets.json file exists and load it
     if args.config.get('key_file_location'):
