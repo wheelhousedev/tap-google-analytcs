@@ -325,6 +325,7 @@ class GAClient:
             metricHeaders = columnHeader.get(
                 'metricHeader', {}).get('metricHeaderEntries', [])
 
+            hashDimensions = []
             for row in report.get('data', {}).get('rows', []):
                 record = {}
                 dimensions = row.get('dimensions', [])
@@ -339,7 +340,7 @@ class GAClient:
                         value = float(dimension)
                     else:
                         value = dimension
-
+                    hashDimensions.append(header.replace("ga:", ""))
                     record[header.replace("ga:", "dim_")] = value
 
                 for i, values in enumerate(dateRangeValues):
@@ -360,8 +361,8 @@ class GAClient:
                 record['report_end_date'] = self.end_date
 
                 # Add hash of dimensions
-                record['dim_hash'] = xxhash.xxh3_128(''.join(dimensions)).hexdigest()
-
+                record['dim_hash'] = xxhash.xxh3_128(''.join(hashDimensions)).hexdigest()
+                # record['account_hash'] = xxhash.xxh3_128(''.join([self.view_id, self.property_id], self.account_id]).hexdigest()
                 # TODO: extract property and account dynamically
                 record['view_id'] = self.view_id
                 record['property_id'] = self.property_id
