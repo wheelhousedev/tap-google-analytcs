@@ -6,6 +6,7 @@ import singer
 import socket
 import requests as req
 import datetime
+import xxhash
 
 from apiclient.discovery import build
 from apiclient.errors import HttpError
@@ -357,8 +358,12 @@ class GAClient:
                 # Also add the [start_date,end_date) used for the report
                 record['report_start_date'] = self.start_date
                 record['report_end_date'] = self.end_date
-                record['view_id'] = self.view_id
+
+                # Add hash of dimensions
+                record['dim_hash'] = xxhash.xxh3_128(''.join(report['dimensions'])).hexdigest()
+
                 # TODO: extract property and account dynamically
+                record['view_id'] = self.view_id
                 record['property_id'] = self.property_id
                 record['account_id'] = self.account_id
 

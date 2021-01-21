@@ -138,6 +138,12 @@ class ReportsHelper:
             table_key_properties.append('view_id')
             table_key_properties.append('property_id')
             table_key_properties.append('account_id')
+
+            # Add dimensions as hash
+            schema['properties']['dim_hash'] = {
+                "type": ["string"],
+            }
+
             # If 'ga:date' has not been added as a Dimension, add the
             #  {start_date, end_date} params as keys
             if not date_dimension_included:
