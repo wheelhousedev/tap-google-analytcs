@@ -332,7 +332,7 @@ class GAClient:
                 dateRangeValues = row.get('metrics', [])
                 
                 # Add hash of dimensions
-                record['dim_hash'] = hashlib.sha256(''.join(dimensions)).hexdigest()
+                record['dim_hash'] = hashlib.sha256(''.join(dimensions).encode('utf-8')).hexdigest()
 
                 for header, dimension in zip(dimensionHeaders, dimensions):
                     data_type = self.lookup_data_type('dimension', header)
