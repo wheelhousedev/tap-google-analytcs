@@ -207,6 +207,7 @@ class GAClient:
                     if nextPageToken is None:
                         break
             elif self.request_period == "day":
+                LOGGER.info("Running daily requests between {} and {}".format(self.start_date, self.end_date))
                 start_date = datetime.datetime.strptime(self.start_date, '%Y-%m-%d')
                 end_date = datetime.datetime.strptime(self.end_date, '%Y-%m-%d')
                 num_periods = ( end_date - start_date ).days

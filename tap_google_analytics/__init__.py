@@ -162,7 +162,7 @@ def process_args():
         LOGGER.critical("tap-google-analytics: invalid request_period '{}' > end_date '{}'".format(request_period, valid_request_periods))
         sys.exit(1)        
             
-    args.request_period = request_period
+    args.config['request_period'] = request_period
 
     # Process the [start_date, end_date) so that they define an open date window
     # that ends yesterday if end_date is not defined
