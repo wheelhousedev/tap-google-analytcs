@@ -360,7 +360,7 @@ class GAClient:
                 record['report_end_date'] = self.end_date
 
                 # Add hash of dimensions
-                record['dim_hash'] = xxhash.xxh3_128(''.join(report['dimensions'])).hexdigest()
+                record['dim_hash'] = xxhash.xxh3_128(''.join(dimensions)).hexdigest()
 
                 # TODO: extract property and account dynamically
                 record['view_id'] = self.view_id
