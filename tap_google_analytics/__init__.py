@@ -156,7 +156,7 @@ def process_args():
 
     # Handle default request period
     # TODO: add support for other periods
-    valid_request_periods = ["day", "week", "month", "full"]
+    valid_request_periods = ["day", "full"]
     request_period = args.config.get('request_period', "full")
     if request_period not in valid_request_periods:
         LOGGER.critical("tap-google-analytics: invalid request_period '{}' > end_date '{}'".format(request_period, valid_request_periods))
@@ -179,7 +179,7 @@ def process_args():
     
     if request_period == "day" and (end_date - start_date).days <= 1 or request_period == "week" and (end_date - start_date).days <= 7 or request_period == "month" and (end_date - start_date).days <= 31  :
         LOGGER.info("Request period is less than or equal to the date range, switching to FULL period")
-        args.request_period = "full"
+        args.config['request_period'] = "full"
 
     # If using a service account, validate that the client_secrets.json file exists and load it
     if args.config.get('key_file_location'):
