@@ -153,6 +153,7 @@ def process_args():
     if 'request_period' in args.config and not args.config.get('request_period'):
             del args.config['request_period']
 
+    args.config['page_size'] = args.config.get('page_size', "100000")
 
     # Handle default request period
     # TODO: add support for other periods

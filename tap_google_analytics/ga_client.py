@@ -78,9 +78,9 @@ class GAClient:
         self.end_date = config['end_date']
         self.quota_user = config.get('quota_user', None)
         self.request_period = config['request_period']
+        self.page_size = config['page_size']
         self.credentials = self.initialize_credentials(config)
         self.analytics = self.initialize_analyticsreporting()
-
         (self.dimensions_ref, self.metrics_ref) = self.fetch_metadata()
 
     def initialize_credentials(self, config):
@@ -289,7 +289,7 @@ class GAClient:
                     {
                         'viewId': self.view_id,
                         'dateRanges': [{'startDate': start_date, 'endDate': end_date}],
-                        'pageSize': '1000',
+                        'pageSize': self.page_size,
                         'pageToken': pageToken,
                         'metrics': report_definition['metrics'],
                         'dimensions': report_definition['dimensions'],
