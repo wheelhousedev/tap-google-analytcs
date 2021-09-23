@@ -212,11 +212,12 @@ class GAClient:
                 LOGGER.info("Running daily requests between {} and {}".format(self.start_date, self.end_date))
                 start_date = datetime.datetime.strptime(self.start_date, '%Y-%m-%d')
                 end_date = datetime.datetime.strptime(self.end_date, '%Y-%m-%d')
-                num_periods = ( end_date - start_date ).days
+                num_periods = ( end_date - start_date ).days + 1
                 LOGGER.info("Breaking request into {} daily chunks".format(num_periods))
                 for offset in range(num_periods):
                     adj_start_date = start_date + datetime.timedelta(days=offset)
-                    adj_end_date = start_date + datetime.timedelta(days=(offset+1))
+                    adj_end_date = start_date + datetime.timedelta(days=offset)
+                    # adj_end_date = start_date + datetime.timedelta(days=(offset+1))
                     track_page = 0
                     while True:
                         LOGGER.info(f'Working on {datetime.datetime.strftime(adj_start_date, "%Y-%m-%d")} to {datetime.datetime.strftime(adj_end_date, "%Y-%m-%d")} page {track_page}')
@@ -225,8 +226,8 @@ class GAClient:
                         response = self.query_api(report_definition, datetime.datetime.strftime(adj_start_date, '%Y-%m-%d'), datetime.datetime.strftime(adj_end_date, '%Y-%m-%d'), nextPageToken)
                         (nextPageToken, results) = self.process_response(response)
                         if track_page > 1:
-                            print(response)
-                            print(nextPageToken)
+                            # LOGGER.debug(response)
+                            LOGGER.info(nextPageToken)
                         records.extend(results)
 
                         if nextPageToken is None:
