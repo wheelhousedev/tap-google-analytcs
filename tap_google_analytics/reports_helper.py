@@ -185,8 +185,8 @@ class ReportsHelper:
                 LOGGER.critical("'{}' has too many metrics defined. GA reports can have maximum 10 metrics.".format(name))
                 sys.exit(1)
 
-            if len(dimensions) > 7:
-                LOGGER.critical("'{}' has too many dimensions defined. GA reports can have maximum 7 dimensions.".format(name))
+            if len(dimensions) > 10:
+                LOGGER.critical("'{}' has too many dimensions defined. GA reports can have maximum 10 dimensions.".format(name))
                 sys.exit(1)
 
             self.validate_dimensions(dimensions)
