@@ -23,19 +23,25 @@ LOGGER = singer.get_logger()
 
 def discover(config):
     # Load the reports json file
-    default_reports = Path(__file__).parent.joinpath('defaults', 'default_report_definition.json')
 
-    report_def_file = config.get('reports', default_reports)
-    if Path(report_def_file).is_file():
-        try:
-            reports_definition = load_json(report_def_file)
-        except ValueError:
-            LOGGER.critical("tap-google-analytics: The JSON definition in '{}' has errors".format(report_def_file))
+    reports = config.get('reports')
+    # Handle file reference catalog
+    if type(reports) == str:
+        report_def_file = reports
+        if Path(report_def_file).is_file():
+            try:
+                reports_definition = load_json(report_def_file)
+            except ValueError:
+                LOGGER.critical("tap-google-analytics: The JSON definition in '{}' has errors".format(report_def_file))
+                sys.exit(1)
+        else:
+            LOGGER.critical("tap-google-analytics: '{}' file not found".format(report_def_file))
             sys.exit(1)
+    elif type(reports) is list:
+        reports_definition = reports
     else:
-        LOGGER.critical("tap-google-analytics: '{}' file not found".format(report_def_file))
+        LOGGER.critical("tap-google-analytics: Invalid reports value")
         sys.exit(1)
-
     # validate the definition
     reports_helper = ReportsHelper(config, reports_definition)
     reports_helper.validate()
@@ -127,6 +133,10 @@ def process_args():
         LOGGER.critical("tap-google-analytics: a valid start_date must be provided.")
         sys.exit(1)
 
+    if not args.config.get('reports'):
+        LOGGER.critical("tap-google-analytics: a valid reports value must be provided.")
+        sys.exit(1)
+
     if not args.config.get('view_id'):
         LOGGER.critical("tap-google-analytics: a valid view_id must be provided.")
         sys.exit(1)
@@ -144,8 +154,6 @@ def process_args():
         sys.exit(1)
 
     # Remove optional args that have empty strings as values
-    if 'reports' in args.config and not args.config.get('reports'):
-        del args.config['reports']
 
     if 'end_date' in args.config and not args.config.get('end_date'):
         del args.config['end_date']
