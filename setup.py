@@ -3,7 +3,7 @@ from setuptools import setup
 
 setup(
     name="tap-google-analytics",
-    version="0.1.3",
+    version="0.1.4",
     description="Wheelhouse DMG fork of Meltano's Google Analytics tap",
     author='Aditya Sastry, Meltano Team & Contributors',
     author_email="aditya@wheelhousedmg.com",
