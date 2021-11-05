@@ -86,8 +86,6 @@ class ReportsHelper:
                     "type": [data_type],
                 }
 
-                table_key_properties.append(dimension)
-
                 metadata.append({
                     "metadata": {
                         "inclusion": "automatic",
@@ -135,20 +133,18 @@ class ReportsHelper:
             schema['properties']['account_id'] = {
                 "type": ["string"],
             }
-            table_key_properties.append('view_id')
-            table_key_properties.append('property_id')
-            table_key_properties.append('account_id')
+            schema['properties']['composite_id'] = {
+                "type": ["string"],
+            }
 
             # Add dimensions as hash
             schema['properties']['dim_hash'] = {
                 "type": ["string"],
             }
 
-            # If 'ga:date' has not been added as a Dimension, add the
-            #  {start_date, end_date} params as keys
-            if not date_dimension_included:
-                table_key_properties.append('report_start_date')
-                table_key_properties.append('report_end_date')
+            table_key_properties.append('composite_id')
+
+            table_key_properties.append('dim_hash')
 
             stream_metadata['metadata']['table-key-properties'] = table_key_properties
 

@@ -331,6 +331,11 @@ class GAClient:
                 record = {}
                 dimensions = row.get('dimensions', [])
                 dateRangeValues = row.get('metrics', [])
+
+                hash_dimensions = dimensions
+                # Track if there is a date set as one of the Dimensions and add the dimensions to the schema and as key_properties
+                if 'ga:date' not in dimensions:
+                    hash_dimensions.extend([self.start_date, self.end_date])
                 
                 # Add hash of dimensions
                 record['dim_hash'] = hashlib.sha256(''.join(dimensions).encode('utf-8')).hexdigest()
@@ -368,6 +373,7 @@ class GAClient:
                 record['view_id'] = self.view_id
                 record['property_id'] = self.property_id
                 record['account_id'] = self.account_id
+                record['composite_id'] = f"{self.account_id}|{self.property_id}|{self.view_id}"
 
 
                 results.append(record)
