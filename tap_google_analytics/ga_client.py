@@ -334,7 +334,7 @@ class GAClient:
 
                 hash_dimensions = dimensions
                 # Track if there is a date set as one of the Dimensions and add the dimensions to the schema and as key_properties
-                if 'ga:date' not in dimensions:
+                if 'ga:date' not in dimensions: # todo - extend this logic for other time series types? (e.g. dateHour?)
                     hash_dimensions.extend([self.start_date, self.end_date])
                 
                 # Add hash of dimensions
@@ -368,8 +368,6 @@ class GAClient:
                 record['report_start_date'] = self.start_date
                 record['report_end_date'] = self.end_date
 
-                # record['account_hash'] = xxhash.xxh3_128(''.join([self.view_id, self.property_id], self.account_id]).hexdigest()
-                # TODO: extract property and account dynamically
                 record['view_id'] = self.view_id
                 record['property_id'] = self.property_id
                 record['account_id'] = self.account_id
